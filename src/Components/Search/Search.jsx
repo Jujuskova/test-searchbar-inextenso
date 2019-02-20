@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import UsersList from '../UsersList/UsersList';
-
+import _ from 'lodash';
 
 class Search extends Component {
   constructor(props) {
@@ -38,18 +38,18 @@ class Search extends Component {
     .catch(err => console.log(err))
   }
 
-  handleInputChange = (e) => {
+  handleInputChange = _.debounce((text) => {
 
     if (this.controller !== undefined) {
       this.controller.abort();
-  }
+    }
 
   if ("AbortController" in window) {
       this.controller = new AbortController();
-  }
+    }
 
     this.setState({
-      searchText: e.target.value
+      searchText: text
     }, () => {
       if (this.state.searchText.length === 0) { 
         this.setState({users: []})
@@ -57,7 +57,7 @@ class Search extends Component {
         this.fetchUsers()
       }
     })
-  } 
+  }, 300) 
 
   render() {
 
@@ -65,7 +65,7 @@ class Search extends Component {
 
     return (
       <div className="search-container">
-        <input type="text" placeholder="Search User" onChange={(e) => this.handleInputChange(e)}/>
+        <input type="text" placeholder="Search User" onChange={(e) => this.handleInputChange(e.target.value)}/>
         {
           users.length > 0 &&
           <UsersList users={users} controller={this.controller}/>

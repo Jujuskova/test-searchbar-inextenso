@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import UsersList from '../UsersList/UsersList';
 
+
 class Search extends Component {
   constructor(props) {
     super(props)
@@ -9,13 +10,21 @@ class Search extends Component {
       searchText: "",
       message: null
     }
+    this.controller = undefined;
   }
 
   fetchUsers = () => {
+
     let { searchText } = this.state;
     let url = `https://api.github.com/search/users?q=${searchText}`;
 
-    fetch(url)
+    fetch(url, { 
+      signal: this.controller.signal,
+      headers: {
+        //'Authorization': `${process.env.AUTH_TOKEN}`,
+        //'User-Agent': 'Jujuskova'
+      }
+    })
     .then(response => response.json())
     .then(data => {
       if(data.total_count === 0) {
@@ -30,6 +39,15 @@ class Search extends Component {
   }
 
   handleInputChange = (e) => {
+
+    if (this.controller !== undefined) {
+      this.controller.abort();
+  }
+
+  if ("AbortController" in window) {
+      this.controller = new AbortController();
+  }
+
     this.setState({
       searchText: e.target.value
     }, () => {
@@ -39,7 +57,7 @@ class Search extends Component {
         this.fetchUsers()
       }
     })
-  }
+  } 
 
   render() {
 
@@ -50,7 +68,7 @@ class Search extends Component {
         <input type="text" placeholder="Search User" onChange={(e) => this.handleInputChange(e)}/>
         {
           users.length > 0 &&
-          <UsersList users={users}/>
+          <UsersList users={users} controller={this.controller}/>
         }
         {message && <p>{message}</p>}
       </div>
